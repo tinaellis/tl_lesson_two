@@ -89,3 +89,43 @@
       self.color = color
       puts "You new #{color} paint job looks great!"
     end
+
+# classes_and_objects_part2
+
+  # 1) Add a class method to your MyCar class that calculates the gas mileage of any car.
+    class MyCar
+      def self.gas_mileage(gallons, miles)
+        puts "#{miles / gallons} miles per gallon of gas"
+      end
+    end
+
+  # 2) Override the to_s method to create a user friendly print out of your object.
+    class MyCar
+      # code omitted for brevity...
+
+      def to_s
+        "My car is a #{self.color}, #{self.year}, #{@model}!"
+      end
+    end
+
+    my_car = MyCar.new("2010", "Ford Focus", "silver")
+    puts my_car  # => My car is a silver, 2010, Ford Focus.
+
+    ## Note the "puts" calls "to_s" automatically.
+
+  # 3) Solution:
+    #We get this error because attr_reader only creates a getter method. When we try to reassign
+    # the name instance variable to "Bob", we need a setter method called name=. We can get this
+    # by changing attr_reader to attr_accessor or attr_writer if we don't intend to use the getter
+    # functionality.
+
+    class Person
+      attr_accessor :name
+      # attr_writer :name ## => This also works but doesn't allow getter access
+      def initialize(name)
+        @name = name
+      end
+    end
+
+    bob = Person.new("Steve")
+    bob.name = "Bob"
