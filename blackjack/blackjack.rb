@@ -47,13 +47,17 @@ class Deck < Players
     total
   end
 
-  def shuffle_cards
+  def print_shuffle_cards
     puts("|S|h|u|f|f|l|i|n|g| |C|a|r|d|s|")
     3.times do
       print ". . . . . . . . . . . . "
       sleep 0.5
     end
-    deck.shuffle!
+    puts ""
+  end
+
+  def delay
+    sleep 1
   end
 
   def new_deck
@@ -67,6 +71,7 @@ class Deck < Players
 
   def sum_up
     puts "#{@player_one}'s cards are #{@player_card}, for a total of #{player_total}"
+    delay
     puts "The dealer's card is "#{dealer_cards[0]}
     puts ""
   end
@@ -112,6 +117,7 @@ class PlayGame < GameDirectives
     welcome
     user_name
     game_into
+    print_shuffle_cards
     kickoff
   end
 
