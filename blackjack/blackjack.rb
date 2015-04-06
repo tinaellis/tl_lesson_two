@@ -1,11 +1,20 @@
-nouns
-player_one
-dealer
-deck
+
+class player_one
+
+end
+
+class dealer
+
+end
+
+class deck
 - suits
 - cards
+end
 
-verbs
-welcome
-shuffle
-calculate_total
+class Play_Game
+  #verbs
+  welcome
+  shuffle
+  calculate_total
+end
