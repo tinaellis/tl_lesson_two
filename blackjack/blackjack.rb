@@ -1,7 +1,6 @@
 
 require "pry"
 class Players
-
   attr_accessor :player_one
 
   def user_name
@@ -9,13 +8,10 @@ class Players
     @player_one = gets.chomp
   end
 
-  def dealer
-  end
-
 end
 
 class Deck < Players
-  attr_accessor :player_card, :deck
+  attr_accessor :player_card, :dealer_card, :deck
 
   BLACKJACK = 21
 
@@ -23,10 +19,6 @@ class Deck < Players
   CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
   def initialize
-  end
-
-  def deck
-    deck = SUITS.product(CARDS)
   end
 
   def calculate_total(cards) #[['heart','2'],['diamond','3']]
@@ -56,37 +48,69 @@ class Deck < Players
     puts ""
   end
 
-  def delay
-    sleep 1
-  end
-
   def new_deck
     @deck = SUITS.product(CARDS)
     @deck.shuffle!
+  end
+
+  def draw_card
+    new_deck.pop
   end
 
   def player_total
     player_total = calculate_total(@player_card)
   end
 
+end
+
+class Hand < Deck
+  def delay
+    sleep 1
+  end
+
   def sum_up
-    puts "#{@player_one}'s cards are #{@player_card}, for a total of #{player_total}"
+    puts "#{player_one}'s cards are #{player_card}, for a total of #{player_total}"
     delay
-    puts "The dealer's card is "#{dealer_cards[0]}
+    puts "The dealer's card is #{dealer_card[0]}"
     puts ""
+  end
+
+  def hit_or_stay
+    gets.chomp.to_i
+  end
+
+  def first_hand
+    if player_total == BLACKJACK
+      puts "Congratulations, you hit blackjack! You win!"
+    else
+      puts "#{player_one} would you like to 1) hit or 2) stay"
+    end
+  end
+
+  def second_hand
+    begin
+      @player_card << draw_card
+      puts "#{player_one}'s cards are #{player_card}, for a total of #{player_total}"
+      puts "#{player_one} Would you like to 1) hit or 2) stay"
+      hit_or_stay
+    end until hit_or_stay == 2 || player_total > BLACKJACK
   end
 
 end
 
-class GameDirectives < Deck
+class GameDirectives < Hand
 
   def kickoff
     begin
       @player_card = []
+      @dealer_card = []
       2.times do
-        @player_card << new_deck.pop
+        @player_card << draw_card
+        @dealer_card << draw_card
       end
       sum_up
+      first_hand
+      hit_or_stay
     end
     puts "Good bye."
   end
@@ -94,8 +118,6 @@ class GameDirectives < Deck
 end
 
 class PlayGame < GameDirectives
-
-
 
   def initialize
 
