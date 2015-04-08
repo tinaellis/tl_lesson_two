@@ -1,148 +1,266 @@
+require 'rubygems'
+require 'pry'
 
-require "pry"
-class Players
-  attr_accessor :player_one
+# Object Oriented Blackjack game
 
-  def user_name
-    puts "Please enter your name:"
-    @player_one = gets.chomp
+# 1) Abstraction
+# 2) Encapsulation
+
+class Card
+  attr_accessor :suit, :face_value
+
+  def initialize(s, fv)
+    @suit = s
+    @face_value = fv
   end
 
+  def pretty_output
+    "The #{face_value} of #{find_suit}"
+  end
+
+  def to_s
+    pretty_output
+  end
+
+  def find_suit
+    ret_val = case suit
+                when 'H' then 'Hearts'
+                when 'D' then 'Diamonds'
+                when 'S' then 'Spades'
+                when 'C' then 'Clubs'
+              end
+    ret_val
+  end
 end
 
-class Deck < Players
-  attr_accessor :player_card, :dealer_card, :deck
-
-  BLACKJACK = 21
-
-  SUITS = ['Heart', 'Diamond', 'Spade', 'Clubs']
-  CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+class Deck
+  attr_accessor :cards
 
   def initialize
-  end
-
-  def calculate_total(cards) #[['heart','2'],['diamond','3']]
-    arr = cards.map{ |e| e[1] }
-    total = 0
-    arr.each do |value|
-      if value == "A"
-        total += 11
-      elsif value.to_i == 0 # J, Q, K
-        total += 10
-      else
-        total += value.to_i # Face Value Cards
+    @cards = []
+    ['H', 'D', 'S', 'C'].each do |suit|
+      ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'].each do |face_value|
+        @cards << Card.new(suit, face_value)
       end
     end
-    arr.select{|e| e == "A"}.count.times do
-      total -= 10 if total > 21
+    scramble!
+  end
+
+  def scramble!
+    cards.shuffle!
+  end
+
+  def deal_one
+    cards.pop
+  end
+
+  def size
+    cards.size
+  end
+end
+
+module Hand
+  def show_hand
+    puts "---- #{name}'s Hand ----"
+    cards.each do|card|
+      puts "=> #{card}"
     end
+    puts "=> Total: #{total}"
+  end
+
+  def total
+    face_values = cards.map{|card| card.face_value }
+
+    total = 0
+    face_values.each do |val|
+      if val == "A"
+        total += 11
+      else
+        total += (val.to_i == 0 ? 10 : val.to_i)
+      end
+    end
+
+    #correct for Aces
+    face_values.select{|val| val == "A"}.count.times do
+      break if total <= 21
+      total -= 10
+    end
+
     total
   end
 
-  def print_shuffle_cards
-    puts("|S|h|u|f|f|l|i|n|g| |C|a|r|d|s|")
-    3.times do
-      print ". . . . . . . . . . . . "
-      sleep 0.5
-    end
-    puts ""
+  def add_card(new_card)
+    cards << new_card
   end
 
-  def new_deck
-    @deck = SUITS.product(CARDS)
-    @deck.shuffle!
+  def is_busted?
+    total > Blackjack::BLACKJACK_AMOUNT
+  end
+end
+
+class Player
+  include Hand
+
+  attr_accessor :name, :cards
+
+  def initialize(n)
+    @name = n
+    @cards = []
   end
 
-  def draw_card
-    new_deck.pop
-  end
-
-  def player_total
-    player_total = calculate_total(@player_card)
+  def show_flop
+    show_hand
   end
 
 end
 
-class Hand < Deck
-  def delay
-    sleep 1
-  end
+class Dealer
+  include Hand
 
-  def sum_up
-    puts "#{player_one}'s cards are #{player_card}, for a total of #{player_total}"
-    delay
-    puts "The dealer's card is #{dealer_card[0]}"
-    puts ""
-  end
-
-  def hit_or_stay
-    gets.chomp.to_i
-  end
-
-  def first_hand
-    if player_total == BLACKJACK
-      puts "Congratulations, you hit blackjack! You win!"
-    else
-      puts "#{player_one} would you like to 1) hit or 2) stay"
-    end
-  end
-
-  def second_hand
-    begin
-      @player_card << draw_card
-      puts "#{player_one}'s cards are #{player_card}, for a total of #{player_total}"
-      puts "#{player_one} Would you like to 1) hit or 2) stay"
-      hit_or_stay
-    end until hit_or_stay == 2 || player_total > BLACKJACK
-  end
-
-end
-
-class GameDirectives < Hand
-
-  def kickoff
-    begin
-      @player_card = []
-      @dealer_card = []
-      2.times do
-        @player_card << draw_card
-        @dealer_card << draw_card
-      end
-      sum_up
-      first_hand
-      hit_or_stay
-    end
-    puts "Good bye."
-  end
-
-end
-
-class PlayGame < GameDirectives
+  attr_accessor :name, :cards
 
   def initialize
-
+    @name = "Dealer"
+    @cards = []
   end
 
-  def welcome
-    puts "+-+-+-+-+-+-+-+ +-+-+ +-+-+-+-+-+-+-+-+-+"
-    puts "|w|e|l|c|o|m|e| |t|o| |b|l|a|c|k|j|a|c|k|"
-    puts "+-+-+-+-+-+-+-+ +-+-+ +-+-+-+-+-+-+-+-+-+"
-    puts " "
+  def show_flop
+    puts "---- #{name}'s Hand ----"
+    puts "=> First card is hidden"
+    puts "=> Second card is #{cards[0]}"
+  end
+end
+
+#data oriented approach to oop
+class Blackjack
+  attr :deck, :player, :dealer
+
+  BLACKJACK_AMOUNT = 21
+  DEALER_HIT_MIN = 17
+
+  def initialize
+    @deck = Deck.new
+    @player = Player.new("Player1")
+    @dealer = Dealer.new
   end
 
-  def game_into
+  def set_player_name
+    puts "What's your name?"
+    player.name = gets.chomp
+  end
+
+  def deal_cards
+    player.add_card(deck.deal_one)
+    dealer.add_card(deck.deal_one)
+    player.add_card(deck.deal_one)
+    dealer.add_card(deck.deal_one)
+  end
+
+  def show_flop
+    player.show_flop
+    dealer.show_flop
+  end
+
+  def blackjack_or_bust?(player_or_dealer)
+    if player_or_dealer.total == BLACKJACK_AMOUNT
+      if player_or_dealer.is_a?(Dealer)
+        puts "Sorry, dealer hit blackjack. #{player.name} loses."
+      else
+        puts "Congratulations, you hit blackjack! #{player.name} wins!"
+      end
+      play_again?
+    elsif player_or_dealer.is_busted?
+      if player_or_dealer.is_a?(Dealer)
+        puts "Congratulations, dealer busted. #{player.name} wins!"
+      else
+      puts "Sorry, #{player.name} busted. #{player.name} loses."
+      end
+      play_again?
+    end
+  end
+
+  def player_turn
+    puts "#{player.name}'s turn."
+
+    blackjack_or_bust?(player)
+    while !player.is_busted?
+      puts "What would you like to do 1) hit or 2) stay"
+      response = gets.chomp
+
+      if !['1', '2'].include?(response)
+        puts "Error: you must enter 1 or 2"
+        next
+      end
+
+      if response == '2'
+        puts "#{player.name} chose to stay."
+        break
+      end
+
+      #hit
+      new_card = deck.deal_one
+      puts "Dealing card to #{player.name}: #{new_card}"
+      player.add_card(new_card)
+      puts "#{player.name}'s total is now: #{player.total}"
+
+      blackjack_or_bust?(player)
+    end
+    puts "#{player.name} stays at #{player.total}."
+  end
+
+  def dealer_turn
+    puts "It's the dealer's turn."
+
+    blackjack_or_bust?(dealer)
+    while dealer.total < DEALER_HIT_MIN
+      new_card = deck.deal_one
+      puts "Dealing card to dealer: #{new_card}"
+      dealer.add_card(new_card)
+      puts "Dealer total is now #{@dealer.total}"
+
+      blackjack_or_bust?(dealer)
+    end
+    puts "Dealer stays at #{dealer.total}."
+  end
+
+  def who_won?
+    if player.total > dealer.total
+      puts "Congratulations, #{player.name} wins !"
+    elsif player.total < dealer.total
+      puts "Sorry, #{player.name} loses"
+    else
+      puts "It's a tie!"
+    end
+    play_again?
+  end
+
+  def play_again?
     puts ""
-    puts "Welcome to Blackjack #{player_one}. You and the dealer are both dealt two cards to start the game."
+    puts "Would you like to play again? 1) yes, 2) no, exit"
+    if gets.chomp == '1'
+      puts "Starting new game..."
+      puts ""
+      deck = Deck.new
+      player.cards = []
+      dealer.cards = []
+      start
+    else
+      puts "Goodbye!"
+      exit
+    end
+
   end
 
-  def play
-    welcome
-    user_name
-    game_into
-    print_shuffle_cards
-    kickoff
+  def start
+    set_player_name
+    deal_cards
+    show_flop
+    player_turn
+    dealer_turn
+    who_won?
   end
 
 end
 
-game = PlayGame.new.play
+game = Blackjack.new
+game.start
