@@ -1,6 +1,4 @@
 # tl_lesson_two
-TL Lesson Two - Information and Exercises
-
 In Lesson Two we learned how to read and understand the following topics:
 
 * classes and objects
